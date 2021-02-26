@@ -1,7 +1,8 @@
-def get_gal_distr(z_bin_num,deltaz,z_res,model,outputpath,FITSFLAG):
+def get_gal_distr(z_bin_num,deltaz,z_res,z_max,model,outputpath,REMOTE_COSMOSIS_FLAG):
     
     """
     model: string. e.g. "z2exp_gausPDF"
+    z_max = z_bin_num*deltaz+constant(~2)
     
     bin1 from       0 - 1deltaz
     bin2 from 1deltaz - 2deltaz
@@ -15,6 +16,8 @@ def get_gal_distr(z_bin_num,deltaz,z_res,model,outputpath,FITSFLAG):
         dtype=[('Z_LOW', '>f8'), ('Z_MID', '>f8'), ('Z_HIGH', '>f8'), ('BIN1', '>f8'), ('BIN2', '>f8'), ...]
     
     genearte AGGREGATE (from z_min to z_max) photo-z AND true-z distributions
+    
+    
     """
     import os,sys
     import numpy as np
@@ -23,10 +26,9 @@ def get_gal_distr(z_bin_num,deltaz,z_res,model,outputpath,FITSFLAG):
     import io_fncs
     from matplotlib import pyplot as plt
     
-    if FITSFLAG == True:
+    if REMOTE_COSMOSIS_FLAG == True:
         import fitsio as fio
     
-    z_max = z_bin_num*deltaz+2
     hist_bin_num = int(z_max*z_res) #how many histogram bins there are as opposed to number of redshift bins    
     
     data_type = [('Z_LOW', '>f8'), ('Z_MID', '>f8'), ('Z_HIGH', '>f8')]
@@ -96,7 +98,7 @@ def get_gal_distr(z_bin_num,deltaz,z_res,model,outputpath,FITSFLAG):
         txt_format += ',%f'
     np.savetxt(os.path.join(outputpath,'n_z/n_photo_z.txt'), photo_z_file, fmt=txt_format)
     np.savetxt(os.path.join(outputpath,'n_z/n_true_z.txt'), true_z_file, fmt=txt_format)
-    if FITSFLAG == True:
+    if REMOTE_COSMOSIS_FLAG == True:
         fio.write(os.path.join(outputpath,'n_z/n_photo_z.fits'),photo_z_file)
         fio.write(os.path.join(outputpath,'n_z/n_true_z.fits'),true_z_file)
         
@@ -104,11 +106,11 @@ def get_gal_distr(z_bin_num,deltaz,z_res,model,outputpath,FITSFLAG):
     for i in range(z_bin_num):
         plt.plot(z_list, photo_z_file['BIN%i'%(i+1)],label = 'PHOTOZ BIN%i'%(i+1))
         plt.plot(z_list, true_z_file['BIN%i'%(i+1)],linestyle='dashed',label = 'TRUEZ  BIN%i'%(i+1))
-        plt.xlabel('redshift z')
-        plt.ylabel('galaxy redshift distribution')
-        plt.title('n(z), normalized for each bin seperately')
-        #plt.legend(bbox_to_anchor=(1, 1.05))
-        plt.tight_layout()
-        plt.savefig(os.path.join(outputpath,'n_z/combined_n_z.png'))
-        
-    return
+    plt.xlabel('redshift z')
+    plt.ylabel('galaxy redshift distribution')
+    plt.title('n(z), normalized for each bin seperately')
+    #plt.legend(bbox_to_anchor=(1, 1.05))
+    plt.tight_layout()
+    plt.savefig(os.path.join(outputpath,'n_z/combined_n_z.png'))
+    plt.show()
+    return [photo_z_file,true_z_file]
