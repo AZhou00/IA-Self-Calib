@@ -99,8 +99,13 @@ def get_gal_distr(z_bin_num,deltaz,z_res,z_max,model,outputpath,REMOTE_COSMOSIS_
     np.savetxt(os.path.join(outputpath,'n_z/n_photo_z.txt'), photo_z_file, fmt=txt_format)
     np.savetxt(os.path.join(outputpath,'n_z/n_true_z.txt'), true_z_file, fmt=txt_format)
     if REMOTE_COSMOSIS_FLAG == True:
-        fio.write(os.path.join(outputpath,'n_z/n_photo_z.fits'),photo_z_file)
-        fio.write(os.path.join(outputpath,'n_z/n_true_z.fits'),true_z_file)
+        #writing fits file
+        #clobber=True ->overwrite
+        #extname -> set hduname
+        #fits source code at
+        #https://github.com/esheldon/fitsio/blob/master/fitsio/fitslib.py
+        fio.write(os.path.join(outputpath,'n_z/n_photo_z.fits'),photo_z_file,clobber=True,extname='NZ_SAMPLE')
+        fio.write(os.path.join(outputpath,'n_z/n_true_z.fits'),true_z_file,clobber=True,extname='NZ_SAMPLE')
         
     plt.subplots(figsize=(8,6))
     for i in range(z_bin_num):
@@ -112,5 +117,7 @@ def get_gal_distr(z_bin_num,deltaz,z_res,z_max,model,outputpath,REMOTE_COSMOSIS_
     #plt.legend(bbox_to_anchor=(1, 1.05))
     plt.tight_layout()
     plt.savefig(os.path.join(outputpath,'n_z/combined_n_z.png'))
-    plt.show()
+    #plt.show()
+    plt.close()
+    
     return [photo_z_file,true_z_file]
