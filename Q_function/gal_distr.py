@@ -17,6 +17,7 @@ def get_gal_distr(z_bin_num,deltaz,z_res,z_max,model,outputpath,REMOTE_COSMOSIS_
     
     genearte AGGREGATE (from z_min to z_max) photo-z AND true-z distributions
     
+    generate photo-z PDF array
     
     """
     import os,sys
@@ -37,6 +38,7 @@ def get_gal_distr(z_bin_num,deltaz,z_res,z_max,model,outputpath,REMOTE_COSMOSIS_
         
     photo_z_file = np.empty(hist_bin_num,dtype=data_type)
     true_z_file  = np.empty(hist_bin_num,dtype=data_type)
+    
     for i in range(hist_bin_num):
         z_low  = i*1/z_res
         z_high = z_low + 1/z_res
@@ -50,13 +52,17 @@ def get_gal_distr(z_bin_num,deltaz,z_res,z_max,model,outputpath,REMOTE_COSMOSIS_
     
     if model == "z2exp_gausPDF":
         gaussian_spread = 0.05
-        
+
         def photo_n_distr(z):
             return z*z*np.exp(-z/0.5) 
 
         z_list = photo_z_file['Z_MID']
         n_p_list = photo_n_distr(z_list)
         for i in range(z_bin_num):
+            
+            ################################
+            #compouting n(z) distributions #
+            ################################
             
             #photo-z
             bin_z_low = i*deltaz
@@ -79,6 +85,30 @@ def get_gal_distr(z_bin_num,deltaz,z_res,z_max,model,outputpath,REMOTE_COSMOSIS_
                     n_true_list += n_p_bin_list[j]*prefector*np.exp(-0.5*((z_list-zphoto)/std)**2)
             n_true_list = n_true_list/(np.sum(n_true_list)*1/z_res)
             true_z_file['BIN%i'%(i+1)] = n_true_list
+            
+#             ################################
+#             #compouting photo-z pdf.       #
+#             ################################
+            
+#             z_lowerbound = (i-1)*deltaz
+#             z_upperbound = (i)*deltaz
+#             #a slice of the z_list that lies withIN the ith z bin range
+#             #taking z_mid values
+#             z_i_list = z_list[int(z_lowerbound*z_res):int(z_upperbound*z_res)]
+            
+#             for ztrue_index in range(len(z_list)):
+#                 ztrue = z_list[ztrue_index]
+#                 #std function as a linear in redshift
+#                 #Zhang 2010 discusses when 0.05->0.03 accuracy improves by 2.3x on page 7 bottom right
+#                 std = gaussian_spread*(1+ztrue)
+#                 #gaussian pdf
+#                 prefector = 1/(np.sqrt(2*np.pi)*std)
+#                 photozPDF[ztrue_index] = prefector*np.exp(-0.5*((z_i_list-ztrue)/std)**2)
+#         #     test_redshift_index=int(1.25*z_res)
+#         #     plt.plot(z_i_list, photozPDF[test_redshift_index],label='area under the curve=%1.3f'%(sum(photozPDF[test_redshift_index]/z_res)))
+#         #     plt.xlabel('redshift z')
+#         #     plt.ylabel('photo_z PDF around z_true=%1.4f, \n with sigma_p=%1.3f' %(z_list[test_redshift_index],gaussian_spread))
+#         #     plt.show()
     
     #IO
     io_fncs.create_dir(os.path.join(outputpath,'n_z'))
